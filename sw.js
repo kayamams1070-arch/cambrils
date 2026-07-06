@@ -1,5 +1,5 @@
 /* Cambrils Tatili — service worker : appli utilisable hors ligne (autoroute, villa sans wifi) */
-var CACHE='cambrils-v1';
+var CACHE='cambrils-v2';
 var CORE=['./','./index.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',function(e){
@@ -17,6 +17,8 @@ self.addEventListener('activate',function(e){
 self.addEventListener('fetch',function(e){
  if(e.request.method!=='GET')return;
  var url=new URL(e.request.url);
+ /* Synchronisation famille : toujours en direct, jamais de cache */
+ if(url.host==='textdb.online')return;
  /* Pages (navigation) : réseau d'abord pour avoir les mises à jour, cache si hors ligne */
  if(e.request.mode==='navigate'){
   e.respondWith(

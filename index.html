@@ -80,6 +80,7 @@ td.r,th.r{text-align:right;white-space:nowrap}
 <p id="herolinks">📍 <a href="https://www.booking.com/hotel/es/villa-flor-cambrils.fr.html" target="_blank">Réservation Villa Flor (Booking)</a> · <a href="https://www.google.com/maps/search/?api=1&query=41.0776226,1.1044839" target="_blank">Voir sur Google Maps</a></p>
 <div id="countdown" style="margin-top:8px;font-weight:700;font-size:1.05em;background:rgba(255,255,255,.18);display:inline-block;padding:6px 16px;border-radius:20px"></div>
 <div id="kidgo" style="margin-top:10px"></div>
+<div id="installbtn" onclick="installApp()" style="display:none;margin-top:10px;background:#ffe066;color:#0a3d62;font-weight:800;padding:10px 20px;border-radius:22px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);display:none">📲 Installer l'application · Uygulamayı yükle</div>
 </div>
 <div id="profilebar" style="background:#065a8c;color:#fff;padding:8px 12px;text-align:center;font-size:.9em"></div>
 
@@ -261,6 +262,35 @@ function showPage(id){
 var store={};
 try{store=JSON.parse(localStorage.getItem('cambrils2026')||'{}');}catch(e){store={};}
 function save(){try{localStorage.setItem('cambrils2026',JSON.stringify(store));}catch(e){}}
+
+/* ---------- SYNCHRONISATION FAMILLE (4 appareils) ---------- */
+var SYNC_KEY='cambrils_kaya_2026_x7t9q';
+var pushTimer=null;
+function schedulePush(){clearTimeout(pushTimer);pushTimer=setTimeout(pushRemote,1200);}
+function pushRemote(){
+ var k={};
+ Object.keys(store).forEach(function(x){if(/^(c\d|a\d|kM_|kE_|wM_|wE_)/.test(x))k[x]=store[x]?1:0;});
+ var j=(store.j||[]).slice(-30);
+ var v=encodeURIComponent(JSON.stringify({k:k,j:j}));
+ if(v.length>7000){j=j.slice(-10);v=encodeURIComponent(JSON.stringify({k:k,j:j}));}
+ fetch('https://textdb.online/update/?key='+SYNC_KEY+'&value='+v).catch(function(){});
+}
+function loadRemote(){
+ fetch('https://textdb.online/'+SYNC_KEY+'?t='+Date.now()).then(function(r){return r.text();}).then(function(txt){
+  if(!txt||txt.charAt(0)!=='{')return;
+  var o=JSON.parse(txt);
+  var changed=false;
+  Object.keys(o.k||{}).forEach(function(x){var nv=!!o.k[x];if(store[x]!==nv){store[x]=nv;changed=true;}});
+  if(o.j&&o.j.length){
+   if(!store.j)store.j=[];
+   var seen={};store.j.forEach(function(e){seen[e.w+e.t+e.ts]=1;});
+   o.j.forEach(function(e){if(!seen[e.w+e.t+e.ts]){store.j.push(e);changed=true;}});
+   store.j.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
+   if(store.j.length>150)store.j=store.j.slice(-150);
+  }
+  if(changed){save();if(store.profile){renderChecklist();renderActs();}}
+ }).catch(function(){});
+}
 
 /* ---------- PROFILS & LANGUE ---------- */
 var PROFILES={papa:"👨 Fatih",maman:"👩 Şule",meryem:"👧 Meryem",esma:"👧 Esma"};
@@ -590,7 +620,7 @@ function tog(k){
  if(m)label=(LNG()==='tr'?checklist_tr:checklist_fr)[+m[1]].items[+m[2]];
  else if(km)label=kidChecklist[+km[1]].items[+km[2]];
  log(label,store[k]);
- save();renderChecklist();
+ save();schedulePush();renderChecklist();
 }
 function updateGlobal(){
  var tot=0,done=0;
@@ -694,7 +724,7 @@ function pickAct(k){
  var i=k[0]==='a'?+k.slice(1):+k.split('_')[1];
  var a=acts()[i];
  log((k[0]==='w'?'💖 ':'🎡 ')+(a?a.n:k),store[k]);
- save();updateTotal();
+ save();schedulePush();updateTotal();
 }
 function anyPicked(){return acts_shared.some(function(_,i){return store['a'+i];});}
 function renderFavs(){
@@ -703,11 +733,22 @@ function renderFavs(){
  var picked=list.filter(function(a,i){return store[keyf(i)];});
  var card=document.getElementById('favcard');
  document.getElementById('favtitle').textContent=isKid()?t.favKid:t.fav;
- if(!picked.length){card.style.display='none';return;}
+ var extra='';
+ if(!isKid()){
+  [['M','Meryem'],['E','Esma']].forEach(function(kid){
+   var ws=list.filter(function(a,i){return store['w'+kid[0]+'_'+i];});
+   if(ws.length){
+    extra+='<div style="margin-top:10px;padding-top:8px;border-top:2px dashed #ffd6e7"><b style="color:#d63384">💖 '+kid[1]+'</b> : '+ws.map(function(a){
+     return '<a href="'+a.map+'" target="_blank" style="color:#0077b6;text-decoration:none;font-weight:600">'+a.e+' '+a.n+'</a>';
+    }).join(' · ')+'</div>';
+   }
+  });
+ }
+ if(!picked.length&&!extra){card.style.display='none';return;}
  card.style.display='block';
  document.getElementById('favlist').innerHTML=picked.map(function(a){
   return '<div style="padding:7px 0;border-bottom:1px solid #f0f4f7"><a href="'+a.map+'" target="_blank" style="text-decoration:none;color:#0077b6;font-weight:600">'+a.e+' '+a.n+' ↗</a> <span style="color:#6b7f92;font-size:.85em">· '+a.tag+'</span></div>';
- }).join('');
+ }).join('')+extra;
 }
 function updateTotal(){
  renderFavs();
@@ -780,7 +821,20 @@ renderActs();
 renderCountdown();
 buildMarkers();
 ensureProfile();
+loadRemote();
+setInterval(loadRemote,45000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)loadRemote();});
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+ e.preventDefault();deferredPrompt=e;
+ var el=document.getElementById('installbtn');if(el)el.style.display='inline-block';
+});
+function installApp(){
+ if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;}
+ var el=document.getElementById('installbtn');if(el)el.style.display='none';
+}
+window.addEventListener('appinstalled',function(){var el=document.getElementById('installbtn');if(el)el.style.display='none';});
 </script>
 </body>
 </html>
