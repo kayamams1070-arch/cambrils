@@ -87,13 +87,6 @@ td.r,th.r{text-align:right;white-space:nowrap}
 </div>
 <div id="profilebar" style="background:#065a8c;color:#fff;padding:8px 12px;text-align:center;font-size:.9em"></div>
 
-<div class="tabs">
-<button class="tab active" id="tabhome" onclick="showPage('home',this)">🏠</button>
-<button class="tab" id="tab0" onclick="showPage('valise',this)">🧳 Valise</button>
-<button class="tab" id="tabtrajet" onclick="showPage('trajet',this)">🚗 Trajet</button>
-<button class="tab" id="tab2" onclick="showPage('activites',this)">🎡 Activités</button>
-<button class="tab" id="tab3" onclick="showPage('carte',this)">🗺️ Carte</button>
-</div>
 
 <!-- ==================== ACCUEIL ==================== -->
 <div class="page active" id="home">
@@ -255,16 +248,17 @@ td.r,th.r{text-align:right;white-space:nowrap}
 </div>
 
 <div class="totalbar" id="totalbar" style="display:none"><span id="totallabel">🎯 Activités choisies :</span> <b id="totalval">0 €</b> <span id="totalcount"></span></div>
+<div id="homefab" onclick="showPage('home')" style="position:fixed;bottom:76px;right:16px;width:58px;height:58px;border-radius:50%;background:#0077b6;color:#fff;display:none;align-items:center;justify-content:center;font-size:27px;box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:1300;cursor:pointer;border:3px solid #fff">🏠</div>
 
 <script>
 /* ---------- NAVIGATION ---------- */
-function showPage(id,btn){
+function showPage(id){
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
- document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
  document.getElementById(id).classList.add('active');
- btn.classList.add('active');
+ document.getElementById('homefab').style.display=(id==='home')?'none':'flex';
  document.getElementById('totalbar').style.display = (id==='activites' && !isKid() && anyPicked()) ? 'block':'none';
  if(id==='carte'){setTimeout(()=>{map.invalidateSize();},150);}
+ window.scrollTo(0,0);
 }
 
 /* ---------- STOCKAGE ---------- */
@@ -350,7 +344,6 @@ function applyLang(){
  document.documentElement.lang=LNG();
  document.getElementById('herotitle').textContent=t.hero;
  document.getElementById('herolinks').innerHTML=t.herolinks;
- ['tab0','tabtrajet','tab2','tab3'].forEach(function(id,i){document.getElementById(id).textContent=t.tabs[i];});
  document.getElementById('listtitle').textContent=t.listtitle;
  document.getElementById('acttitle').textContent=t.acttitle;
  document.getElementById('actintro').textContent=t.actintro;
@@ -374,9 +367,7 @@ function renderProfileBar(){
  b.innerHTML='👤 <b>'+PROFILES[store.profile]+'</b>'+
  ' · <a href="#" onclick="tryChangeProfile();return false" style="color:#ffe066">'+t.change+'</a>'+
  (isPapa?' · <a href="#" onclick="showJournal();return false" style="color:#ffe066">'+t.journal+'</a>':'');
- var tt=document.getElementById('tabtrajet');
- if(tt)tt.style.display=isKid()?'none':'';
- if(isKid()&&document.getElementById('trajet').classList.contains('active'))showPage('valise',document.getElementById('tab0'));
+ if(isKid()&&document.getElementById('trajet').classList.contains('active'))showPage('home');
 }
 function who(){return PROFILES[store.profile]?PROFILES[store.profile].replace(' 👑',''):'?';}
 function log(label,checked){
@@ -774,13 +765,13 @@ function updateTotal(){
 function renderHome(){
  var w=document.getElementById('homewrap');if(!w)return;
  var t=T();
- var items=[['valise','🧳',t.tabs[0],'tab0']];
- if(!isKid())items.push(['trajet','🚗',t.tabs[1],'tabtrajet']);
- items.push(['activites','🎡',t.tabs[2],'tab2']);
- items.push(['carte','🗺️',t.tabs[3],'tab3']);
+ var items=[['valise','🧳',t.tabs[0]]];
+ if(!isKid())items.push(['trajet','🚗',t.tabs[1]]);
+ items.push(['activites','🎡',t.tabs[2]]);
+ items.push(['carte','🗺️',t.tabs[3]]);
  var h='<div class="home-grid">';
  items.forEach(function(it){
-  h+='<div class="home-item" onclick="showPage(\''+it[0]+'\',document.getElementById(\''+it[3]+'\'))"><div class="home-circle">'+it[1]+'</div><span>'+it[2].replace(/^[^\s]+\s/,'')+'</span></div>';
+  h+='<div class="home-item" onclick="showPage(\''+it[0]+'\')"><div class="home-circle">'+it[1]+'</div><span>'+it[2].replace(/^[^\s]+\s/,'')+'</span></div>';
  });
  h+='</div>';
  var tot=0,done=0,pref=curPref();
