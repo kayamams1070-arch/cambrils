@@ -20,9 +20,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f6fa;color:#1a2b3
 .hero h1{font-size:1.5em}
 .hero p{opacity:.92;margin-top:4px;font-size:.95em}
 .hero a{color:#ffe066;font-weight:600}
-.tabs{display:flex;position:sticky;top:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12);z-index:1000}
-.tab{flex:1;padding:12px 4px;text-align:center;border:none;background:none;font-size:.92em;font-weight:600;color:#6b7f92;cursor:pointer;border-bottom:3px solid transparent}
-.tab.active{color:#0077b6;border-bottom-color:#0077b6;background:#eef8fd}
 .page{display:none;padding:14px;max-width:900px;margin:0 auto}
 .page.active{display:block}
 .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.07)}
@@ -40,7 +37,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f6fa;color:#1a2b3
 .btn-map{background:#e8f5e9;color:#1b7a3d}
 .btn-site{background:#e3f2fd;color:#0d5ba8}
 .btn-book{background:#e7f0fe;color:#0b57d0}
-.btn-reset{background:#fdecea;color:#c0392b;float:right;font-size:.8em;padding:6px 10px}
 .act-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.07);border-left:5px solid #ccc}
 .act-card.free{border-left-color:#2ecc71}
 .act-card.paid{border-left-color:#f39c12}
@@ -285,7 +281,7 @@ fr:{tabs:['🧳 Valise','🚗 Trajet','🎡 Activités','🗺️ Carte'],
  totallabel:'🎯 Activités choisies :',actWord:function(n){return n+' activité'+(n>1?'s':'');},
  openMaps:'Ouvrir dans Google Maps',siteBtn:'🌐 Site & billets',
  who:'👋 Qui utilise l\'appli ?',cancel:'Annuler',change:'changer',share:'📤 partager mon avancement',journal:'📒 journal',
- journalTitle:'📒 Journal famille',journalEmpty:'Rien pour l\'instant. Quand quelqu\'un coche quelque chose, ça s\'affiche ici. Les autres téléphones envoient leur avancement avec « 📤 partager ».',close:'✖ Fermer',
+ journalTitle:'📒 Journal famille',journalEmpty:'Rien pour l\'instant. Tout ce qui est coché sur ce téléphone s\'affichera ici.',close:'✖ Fermer',
  shareMsg:'Mon avancement vacances 🌴 ouvre ce lien : ',shareCopied:'Lien copié ! Colle-le dans WhatsApp 👍',sharePrompt:'Copie ce lien et envoie-le :',merged:'✅ Avancement famille fusionné !',
  cd:function(g){return '🚗 Départ dans '+g+' jour'+(g>1?'s':'')+' !';},cdRoad:'🚗 En route ! Cambrils nous attend !',cdThere:'🌴 EN VACANCES ! Profitez !',cdAfter:'🌴 Quelles belles vacances c\'était…',
  kidCardTitle:'🚗 On arrive quand ?',
@@ -385,35 +381,6 @@ function showJournal(){
  if(!j.length)h+='<div style="color:#cfe8f5">'+t.journalEmpty+'</div>';
  j.forEach(function(e){h+='<div style="background:#fff;border-radius:10px;padding:9px 12px;margin-bottom:7px;font-size:.92em"><b>'+e.w+'</b> — '+e.t+' <span style="color:#8aa0b3;font-size:.85em">· '+e.h+'</span></div>';});
  ov.innerHTML=h;document.body.appendChild(ov);
-}
-
-/* ---------- PARTAGE ENTRE TELEPHONES ---------- */
-function shareState(){
- var t=T(),o={k:{},j:(store.j||[]).slice(-80)};
- Object.keys(store).forEach(function(k){if((k[0]==='c'||k[0]==='a'||k[0]==='k'||k[0]==='w')&&store[k])o.k[k]=1;});
- var b64=btoa(unescape(encodeURIComponent(JSON.stringify(o))));
- var url=(location.protocol.indexOf('http')===0?location.origin+location.pathname:location.href.split('#')[0])+'#s='+b64;
- var msg=t.shareMsg+url;
- if(navigator.share){navigator.share({title:'Cambrils',text:msg}).catch(function(){});}
- else if(navigator.clipboard){navigator.clipboard.writeText(msg);alert(t.shareCopied);}
- else{prompt(t.sharePrompt,url);}
-}
-function mergeFromHash(){
- if(location.hash.indexOf('#s=')!==0)return;
- try{
-  var o=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));
-  Object.keys(o.k||{}).forEach(function(k){store[k]=true;});
-  if(o.j&&o.j.length){
-   if(!store.j)store.j=[];
-   var seen={};store.j.forEach(function(e){seen[e.w+e.t+e.ts]=1;});
-   o.j.forEach(function(e){if(!seen[e.w+e.t+e.ts])store.j.push(e);});
-   store.j.sort(function(a,b){return a.ts-b.ts;});
-   if(store.j.length>150)store.j=store.j.slice(-150);
-  }
-  save();
-  history.replaceState(null,'',location.pathname+location.search);
-  alert(UI.fr.merged);
- }catch(e){}
 }
 
 /* ---------- CHECKLISTS (FR & TR alignées : mêmes clés) ---------- */
@@ -602,7 +569,6 @@ function curPref(){return isKid()?('k'+kidP()+'_'):'c';}
 function renderChecklist(){
  var host=document.getElementById('checklists');host.innerHTML='';
  var t=T();
- var rb=document.getElementById('resetbtn');if(rb)rb.style.display=isKid()?'none':'';
  var list=curList(),pref=curPref();
  list.forEach(function(c,ci){
   var vis=c.items.filter(function(it){return isKid()||!hiddenItem(it);});
@@ -624,11 +590,6 @@ function tog(k){
  if(m)label=(LNG()==='tr'?checklist_tr:checklist_fr)[+m[1]].items[+m[2]];
  else if(km)label=kidChecklist[+km[1]].items[+km[2]];
  log(label,store[k]);
- save();renderChecklist();
-}
-function resetChecks(){
- if(!confirm(T().resetConfirm))return;
- Object.keys(store).forEach(function(k){if(k[0]==='c')delete store[k];});
  save();renderChecklist();
 }
 function updateGlobal(){
@@ -763,7 +724,7 @@ function updateTotal(){
 
 /* ---------- ECRAN D'ACCUEIL ---------- */
 function renderHome(){
- var w=document.getElementById('homewrap');if(!w)return;
+ var w=document.getElementById('homewrap');if(!w||!store.profile)return;
  var t=T();
  var items=[['valise','🧳',t.tabs[0]]];
  if(!isKid())items.push(['trajet','🚗',t.tabs[1]]);
@@ -814,12 +775,12 @@ function buildMarkers(){
 }
 
 /* ---------- INIT ---------- */
-mergeFromHash();
 renderChecklist();
 renderActs();
 renderCountdown();
 buildMarkers();
 ensureProfile();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
 </script>
 </body>
 </html>
