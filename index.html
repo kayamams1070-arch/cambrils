@@ -69,6 +69,12 @@ td.r,th.r{text-align:right;white-space:nowrap}
 #map{height:65vh;border-radius:14px}
 .legend{font-size:.85em;margin-top:8px;color:#4a5f72}
 @media(min-width:700px){.acts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.act-card{margin-bottom:0}}
+.home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;max-width:400px;margin:18px auto 6px}
+.home-item{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.home-circle{width:106px;height:106px;border-radius:50%;background:linear-gradient(135deg,#0077b6,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:46px;box-shadow:0 6px 16px rgba(0,119,182,.35);border:4px solid #fff;transition:transform .12s}
+.home-item:active .home-circle{transform:scale(.92)}
+.home-item span{font-weight:700;color:#0a3d62;font-size:1.02em}
+.home-sum{text-align:center;color:#4a5f72;font-size:.95em;margin-top:16px;background:#fff;border-radius:12px;padding:10px;max-width:400px;margin-left:auto;margin-right:auto;box-shadow:0 2px 6px rgba(0,0,0,.06)}
 </style>
 </head>
 <body>
@@ -82,14 +88,20 @@ td.r,th.r{text-align:right;white-space:nowrap}
 <div id="profilebar" style="background:#065a8c;color:#fff;padding:8px 12px;text-align:center;font-size:.9em"></div>
 
 <div class="tabs">
-<button class="tab active" id="tab0" onclick="showPage('valise',this)">🧳 Valise</button>
+<button class="tab active" id="tabhome" onclick="showPage('home',this)">🏠</button>
+<button class="tab" id="tab0" onclick="showPage('valise',this)">🧳 Valise</button>
 <button class="tab" id="tabtrajet" onclick="showPage('trajet',this)">🚗 Trajet</button>
 <button class="tab" id="tab2" onclick="showPage('activites',this)">🎡 Activités</button>
 <button class="tab" id="tab3" onclick="showPage('carte',this)">🗺️ Carte</button>
 </div>
 
+<!-- ==================== ACCUEIL ==================== -->
+<div class="page active" id="home">
+<div id="homewrap"></div>
+</div>
+
 <!-- ==================== VALISE / BAVUL ==================== -->
-<div class="page active" id="valise">
+<div class="page" id="valise">
 <div class="card">
 <h2><span id="listtitle">Checklist départ</span></h2>
 <div class="progress-wrap"><div class="progress-bar" id="globalbar"></div></div>
@@ -347,6 +359,7 @@ function applyLang(){
  document.getElementById('totallabel').textContent=t.totallabel;
  document.getElementById('trajet-fr').style.display=LNG()==='fr'?'':'none';
  document.getElementById('trajet-tr').style.display=LNG()==='tr'?'':'none';
+ renderHome();
  var kg=document.getElementById('kidgo');
  kg.innerHTML=isKid()?'<a href="https://www.google.com/maps/dir/?api=1&destination=41.0776226,1.1044839&travelmode=driving" target="_blank" style="display:inline-block;background:#fff;color:#0077b6;font-weight:800;font-size:1.05em;padding:12px 20px;border-radius:24px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">'+t.kidBtnVilla+'</a>':'';
  renderProfileBar();
@@ -634,6 +647,7 @@ function updateGlobal(){
  var pct=tot?Math.round(done/tot*100):0;
  document.getElementById('globalbar').style.width=pct+'%';
  document.getElementById('globaltxt').textContent=T().ready(pct,done,tot);
+ renderHome();
 }
 
 /* ---------- ACTIVITES (FR & TR alignées : mêmes indices) ---------- */
@@ -753,6 +767,29 @@ function updateTotal(){
   document.getElementById('totalval').textContent='~'+t+' €';
   document.getElementById('totalcount').textContent=' ('+T().actWord(n)+')';
  }else{bar.style.display='none';}
+ renderHome();
+}
+
+/* ---------- ECRAN D'ACCUEIL ---------- */
+function renderHome(){
+ var w=document.getElementById('homewrap');if(!w)return;
+ var t=T();
+ var items=[['valise','🧳',t.tabs[0],'tab0']];
+ if(!isKid())items.push(['trajet','🚗',t.tabs[1],'tabtrajet']);
+ items.push(['activites','🎡',t.tabs[2],'tab2']);
+ items.push(['carte','🗺️',t.tabs[3],'tab3']);
+ var h='<div class="home-grid">';
+ items.forEach(function(it){
+  h+='<div class="home-item" onclick="showPage(\''+it[0]+'\',document.getElementById(\''+it[3]+'\'))"><div class="home-circle">'+it[1]+'</div><span>'+it[2].replace(/^[^\s]+\s/,'')+'</span></div>';
+ });
+ h+='</div>';
+ var tot=0,done=0,pref=curPref();
+ curList().forEach(function(c,ci){c.items.forEach(function(it,ii){if(!isKid()&&hiddenItem(it))return;tot++;if(store[pref+ci+'_'+ii])done++;});});
+ var pct=tot?Math.round(done/tot*100):0;
+ var n=0,kf=function(i){return isKid()?('w'+kidP()+'_'+i):('a'+i);};
+ acts_shared.forEach(function(a,i){if(store[kf(i)])n++;});
+ h+='<div class="home-sum">🧳 '+(LNG()==='tr'?('%'+pct+' hazır'):(pct+' % prêt'))+' &nbsp;·&nbsp; '+(isKid()?'💖':'🎡')+' '+n+'</div>';
+ w.innerHTML=h;
 }
 
 /* ---------- COMPTE A REBOURS ---------- */
