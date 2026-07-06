@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0077b6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>🌴 Vacances Cambrils — Villa Flor</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+button,.tab,.check-item,.pick,.btn,a{touch-action:manipulation}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f6fa;color:#1a2b3c;padding-bottom:70px}
+.hero{background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;padding:22px 16px;text-align:center}
+.hero h1{font-size:1.5em}
+.hero p{opacity:.92;margin-top:4px;font-size:.95em}
+.hero a{color:#ffe066;font-weight:600}
+.tabs{display:flex;position:sticky;top:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12);z-index:1000}
+.tab{flex:1;padding:12px 4px;text-align:center;border:none;background:none;font-size:.92em;font-weight:600;color:#6b7f92;cursor:pointer;border-bottom:3px solid transparent}
+.tab.active{color:#0077b6;border-bottom-color:#0077b6;background:#eef8fd}
+.page{display:none;padding:14px;max-width:900px;margin:0 auto}
+.page.active{display:block}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.card h2{font-size:1.12em;margin-bottom:10px;color:#0077b6}
+.card h3{font-size:1em;margin:10px 0 6px}
+.progress-wrap{background:#e3edf3;border-radius:10px;height:14px;overflow:hidden;margin:8px 0 14px}
+.progress-bar{height:100%;background:linear-gradient(90deg,#00b4d8,#0077b6);width:0;transition:width .3s;border-radius:10px}
+.check-item{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid #f0f4f7;cursor:pointer;user-select:none}
+.check-item:last-child{border-bottom:none}
+.check-item input{width:20px;height:20px;accent-color:#0077b6;flex-shrink:0;cursor:pointer}
+.check-item.done span{text-decoration:line-through;color:#9ab0c0}
+.cat-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.cat-count{font-size:.82em;color:#6b7f92;background:#eef4f8;padding:3px 10px;border-radius:12px}
+.btn{display:inline-block;padding:9px 14px;border-radius:10px;text-decoration:none;font-weight:600;font-size:.9em;border:none;cursor:pointer;margin:4px 6px 2px 0}
+.btn-map{background:#e8f5e9;color:#1b7a3d}
+.btn-site{background:#e3f2fd;color:#0d5ba8}
+.btn-book{background:#e7f0fe;color:#0b57d0}
+.btn-reset{background:#fdecea;color:#c0392b;float:right;font-size:.8em;padding:6px 10px}
+.act-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.07);border-left:5px solid #ccc}
+.act-card.free{border-left-color:#2ecc71}
+.act-card.paid{border-left-color:#f39c12}
+.act-card.top{border-left-color:#e74c3c}
+.act-title{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.act-title h3{font-size:1.05em}
+.act-price{font-weight:700;color:#0077b6;white-space:nowrap;font-size:.95em}
+.act-meta{font-size:.85em;color:#6b7f92;margin:4px 0 6px}
+.act-desc{font-size:.92em;margin-bottom:6px}
+.pick{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.9em;font-weight:600;color:#1b7a3d;cursor:pointer;user-select:none}
+.pick input{width:19px;height:19px;accent-color:#1b7a3d;cursor:pointer}
+.totalbar{position:fixed;bottom:0;left:0;right:0;background:#0a3d62;color:#fff;padding:12px 16px;text-align:center;font-weight:600;z-index:1100;font-size:.98em}
+.totalbar b{color:#ffe066;font-size:1.15em}
+.step{display:flex;gap:12px;margin-bottom:4px}
+.step-dot{width:14px;height:14px;border-radius:50%;background:#00b4d8;margin-top:5px;flex-shrink:0}
+.step-line{width:2px;background:#bcd9e8;flex-grow:1;margin:2px auto 0}
+.step-col{display:flex;flex-direction:column;align-items:center}
+.step-body{padding-bottom:16px;flex:1}
+.step-body b{font-size:1.02em}
+.step-body small{color:#6b7f92;display:block;margin:2px 0 6px}
+.tip{background:#fff8e1;border-left:4px solid #f5b301;padding:10px 12px;border-radius:8px;font-size:.9em;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.9em}
+td,th{padding:7px 6px;border-bottom:1px solid #eef2f5;text-align:left}
+th{color:#0077b6}
+td.r,th.r{text-align:right;white-space:nowrap}
+#map{height:65vh;border-radius:14px}
+.legend{font-size:.85em;margin-top:8px;color:#4a5f72}
+@media(min-width:700px){.acts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.act-card{margin-bottom:0}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+<h1 id="herotitle">🌴 Nos vacances à Cambrils</h1>
+<p id="herolinks">📍 <a href="https://www.booking.com/hotel/es/villa-flor-cambrils.fr.html" target="_blank">Réservation Villa Flor (Booking)</a> · <a href="https://www.google.com/maps/search/?api=1&query=41.0776226,1.1044839" target="_blank">Voir sur Google Maps</a></p>
+<div id="countdown" style="margin-top:8px;font-weight:700;font-size:1.05em;background:rgba(255,255,255,.18);display:inline-block;padding:6px 16px;border-radius:20px"></div>
+<div id="kidgo" style="margin-top:10px"></div>
+</div>
+<div id="profilebar" style="background:#065a8c;color:#fff;padding:8px 12px;text-align:center;font-size:.9em"></div>
+
+<div class="tabs">
+<button class="tab active" id="tab0" onclick="showPage('valise',this)">🧳 Valise</button>
+<button class="tab" id="tabtrajet" onclick="showPage('trajet',this)">🚗 Trajet</button>
+<button class="tab" id="tab2" onclick="showPage('activites',this)">🎡 Activités</button>
+<button class="tab" id="tab3" onclick="showPage('carte',this)">🗺️ Carte</button>
+</div>
+
+<!-- ==================== VALISE / BAVUL ==================== -->
+<div class="page active" id="valise">
+<div class="card">
+<h2><span id="listtitle">Checklist départ</span> <button class="btn btn-reset" id="resetbtn" onclick="resetChecks()">↺ Tout décocher</button></h2>
+<div class="progress-wrap"><div class="progress-bar" id="globalbar"></div></div>
+<div id="globaltxt" style="font-size:.9em;color:#6b7f92"></div>
+</div>
+<div id="checklists"></div>
+</div>
+
+<!-- ==================== TRAJET / YOLCULUK ==================== -->
+<div class="page" id="trajet">
+
+<div id="trajet-fr">
+<div class="card">
+<h2>🚗 Aller — vendredi 10 → dimanche 12 juillet (~1 370 km, en douceur)</h2>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>Ven. 10 · ~8h00 — Départ de Bruxelles</b>
+<small>Réservoir plein, pique-nique halal dans la glacière, tablettes chargées 😄 Pauses vers Reims (~10h30) et déjeuner vers Dijon/Beaune (~13h)</small>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>~16h — Arrivée à LYON · nuit d'étape n°1 🛏️</b>
+<small>~695 km faits. Soirée tranquille : parc de la Tête d'Or (gratuit, super aire de jeux) ou balade + glace</small>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=Lyon&checkin=2026-07-10&checkout=2026-07-11&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Hôtels Lyon 10→11 juil. (Booking)</a>
+<a class="btn btn-map" href="https://www.google.com/maps/dir/?api=1&destination=Lyon,France" target="_blank">🗺️ Itinéraire vers Lyon</a>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>Sam. 11 · ~9h30 — Lyon → Nîmes (~250 km, 2h30)</b>
+<small>Après-midi découverte : <b>baignade au pont du Gard</b> (magique pour les filles) ou arènes de Nîmes. Nuit d'étape n°2 🛏️</small>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=N%C3%AEmes&checkin=2026-07-11&checkout=2026-07-12&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Hôtels Nîmes 11→12 juil. (Booking)</a>
+<a class="btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Pont+du+Gard" target="_blank">🗺️ Pont du Gard (Maps)</a>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>Dim. 12 · ~11h00 — Nîmes → Cambrils (~420 km, ~4h)</b>
+<small>Déjeuner rapide vers Perpignan, frontière, AP-7 gratuite jusqu'à Cambrils</small>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot" style="background:#e74c3c"></div></div><div class="step-body">
+<b>~15h30-17h — Arrivée Villa Flor, Cambrils 🎉</b>
+<small>Check-in, courses au Mercadona/Lidl, et PLOUF dans la piscine ! 💦</small>
+<a class="btn btn-map" href="https://www.google.com/maps/dir/?api=1&destination=41.0776226,1.1044839" target="_blank">🗺️ Itinéraire GPS direct villa</a>
+</div></div>
+</div>
+
+<div class="card">
+<h2>🏠 Retour — vendredi 17 juillet</h2>
+<p style="font-size:.93em;margin-bottom:8px">Check-out le matin (10h-11h en général). Deux options :</p>
+<h3>Option A — d'une traite (~13h de route)</h3>
+<p style="font-size:.9em;color:#6b7f92">Faisable mais dur avec les enfants. Partir à 7h max.</p>
+<h3>Option B — nuit d'étape (recommandé 👍)</h3>
+<p style="font-size:.9em">Cambrils → <b>Montpellier</b> (~3h30, après-midi plage/centre-ville) ou <b>Lyon</b> (~6h), retour en Belgique samedi 18 reposés.</p>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=Montpellier&checkin=2026-07-17&checkout=2026-07-18&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Hôtels Montpellier 17→18 juil.</a>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=Lyon&checkin=2026-07-17&checkout=2026-07-18&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Hôtels Lyon 17→18 juil.</a>
+</div>
+
+<div class="card">
+<h2>💶 Budget route (estimation aller-retour)</h2>
+<table>
+<tr><th>Poste</th><th class="r">Estimation</th></tr>
+<tr><td>Péages France (A/R)</td><td class="r">~180-200 €</td></tr>
+<tr><td>Autoroute Espagne (AP-7 en grande partie gratuite)</td><td class="r">~0-10 €</td></tr>
+<tr><td>Carburant (~2 750 km)</td><td class="r">~230-280 €</td></tr>
+<tr><td>Nuits d'étape aller (Lyon + Nîmes)</td><td class="r">~200-280 €</td></tr>
+<tr><td>Nuit d'étape retour (optionnelle)</td><td class="r">~100-150 €</td></tr>
+<tr><td>Repas de route (2 jours × famille)</td><td class="r">~80-120 €</td></tr>
+<tr><th>Total route</th><th class="r">~700-900 €</th></tr>
+</table>
+<div class="tip">💡 <b>Badge télépéage</b> (Ulys, Bip&amp;Go...) : commande-le maintenant — valable France + Espagne, tu évites les files aux péages avec les enfants. ~2 €/mois utilisé.</div>
+<div class="tip">💡 Plein <b>au Luxembourg</b> au départ (si sur ta route), et <b>en Espagne</b> avant le retour (moins cher qu'en France).</div>
+</div>
+</div>
+
+<div id="trajet-tr" style="display:none">
+<div class="card">
+<h2>🚗 Gidiş — 10 Cuma → 12 Pazar Temmuz (~1.370 km, rahat tempo)</h2>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>Cuma 10 · ~08:00 — Brüksel'den yola çıkış</b>
+<small>Depo dolu, buzlukta helal piknik, tabletler şarjlı 😄 Molalar: Reims civarı (~10:30), öğle yemeği Dijon/Beaune (~13:00)</small>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>~16:00 — LYON'a varış · 1. mola gecesi 🛏️</b>
+<small>~695 km bitti. Sakin akşam: Tête d'Or Parkı (ücretsiz, süper oyun alanı) veya şehir gezisi + dondurma</small>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=Lyon&checkin=2026-07-10&checkout=2026-07-11&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Lyon otelleri 10→11 Tem. (Booking)</a>
+<a class="btn btn-map" href="https://www.google.com/maps/dir/?api=1&destination=Lyon,France" target="_blank">🗺️ Lyon'a rota</a>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>Cumartesi 11 · ~09:30 — Lyon → Nîmes (~250 km, 2s30)</b>
+<small>Öğleden sonra keşif: <b>Pont du Gard'da nehirde yüzme</b> (kızlar için büyülü bir yer) veya Nîmes arenaları. 2. mola gecesi 🛏️</small>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=N%C3%AEmes&checkin=2026-07-11&checkout=2026-07-12&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Nîmes otelleri 11→12 Tem. (Booking)</a>
+<a class="btn btn-map" href="https://www.google.com/maps/search/?api=1&query=Pont+du+Gard" target="_blank">🗺️ Pont du Gard (Maps)</a>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot"></div><div class="step-line"></div></div><div class="step-body">
+<b>Pazar 12 · ~11:00 — Nîmes → Cambrils (~420 km, ~4 saat)</b>
+<small>Perpignan civarı hızlı öğle yemeği, sınır geçişi, Cambrils'e kadar ücretsiz AP-7 otoyolu</small>
+</div></div>
+<div class="step"><div class="step-col"><div class="step-dot" style="background:#e74c3c"></div></div><div class="step-body">
+<b>~15:30-17:00 — Villa Flor'a varış, Cambrils 🎉</b>
+<small>Check-in, Mercadona/Lidl'den alışveriş ve havuza atlama! 💦</small>
+<a class="btn btn-map" href="https://www.google.com/maps/dir/?api=1&destination=41.0776226,1.1044839" target="_blank">🗺️ Villaya direkt GPS rotası</a>
+</div></div>
+</div>
+
+<div class="card">
+<h2>🏠 Dönüş — 17 Temmuz Cuma</h2>
+<p style="font-size:.93em;margin-bottom:8px">Check-out sabah (genelde 10:00-11:00). İki seçenek:</p>
+<h3>Seçenek A — tek seferde (~13 saat yol)</h3>
+<p style="font-size:.9em;color:#6b7f92">Yapılır ama çocuklarla zor. En geç 07:00'de çıkmalı.</p>
+<h3>Seçenek B — mola gecesi (tavsiye edilir 👍)</h3>
+<p style="font-size:.9em">Cambrils → <b>Montpellier</b> (~3s30) veya <b>Lyon</b> (~6s), sonra 18 Cumartesi dinlenmiş şekilde Belçika'ya.</p>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=Montpellier&checkin=2026-07-17&checkout=2026-07-18&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Montpellier otelleri 17→18 Tem.</a>
+<a class="btn btn-book" href="https://www.booking.com/searchresults.fr.html?ss=Lyon&checkin=2026-07-17&checkout=2026-07-18&group_adults=2&group_children=2&age=8&age=6&no_rooms=1" target="_blank">🏨 Lyon otelleri 17→18 Tem.</a>
+</div>
+
+<div class="card">
+<h2>💶 Yol bütçesi (gidiş-dönüş tahmini)</h2>
+<table>
+<tr><th>Kalem</th><th class="r">Tahmin</th></tr>
+<tr><td>Fransa otoyol ücretleri (G/D)</td><td class="r">~180-200 €</td></tr>
+<tr><td>İspanya otoyolu (AP-7 çoğunlukla ücretsiz)</td><td class="r">~0-10 €</td></tr>
+<tr><td>Yakıt (~2.750 km)</td><td class="r">~230-280 €</td></tr>
+<tr><td>Gidiş mola geceleri (Lyon + Nîmes)</td><td class="r">~200-280 €</td></tr>
+<tr><td>Dönüş mola gecesi (opsiyonel)</td><td class="r">~100-150 €</td></tr>
+<tr><td>Yol yemekleri (2 gün × aile)</td><td class="r">~80-120 €</td></tr>
+<tr><th>Toplam yol</th><th class="r">~700-900 €</th></tr>
+</table>
+<div class="tip">💡 <b>Otoyol geçiş cihazı</b> (Ulys, Bip&amp;Go...): şimdi sipariş et — Fransa + İspanya'da geçerli. Kullanılan ay ~2 €.</div>
+<div class="tip">💡 Çıkışta <b>Lüksemburg'dan</b> depoyu doldur, dönüşten önce <b>İspanya'da</b> doldur (Fransa'dan ucuz).</div>
+</div>
+</div>
+
+</div>
+
+<!-- ==================== ACTIVITES / AKTİVİTELER ==================== -->
+<div class="page" id="activites">
+<div class="card">
+<h2 id="acttitle">🎡 À faire autour de Cambrils</h2>
+<p id="actintro" style="font-size:.9em;color:#6b7f92"></p>
+</div>
+<div class="card" id="favcard" style="display:none;border-left:5px solid #ffe066">
+<h2 id="favtitle">⭐ Nos choix</h2>
+<div id="favlist"></div>
+</div>
+<div class="acts" id="actlist"></div>
+<div style="height:20px"></div>
+</div>
+
+<!-- ==================== CARTE / HARİTA ==================== -->
+<div class="page" id="carte">
+<div class="card">
+<h2 id="maptitle">🗺️ Tout sur la carte</h2>
+<div id="map"></div>
+<p class="legend" id="maplegend"></p>
+</div>
+</div>
+
+<div class="totalbar" id="totalbar" style="display:none"><span id="totallabel">🎯 Activités choisies :</span> <b id="totalval">0 €</b> <span id="totalcount"></span></div>
+
+<script>
+/* ---------- NAVIGATION ---------- */
+function showPage(id,btn){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ btn.classList.add('active');
+ document.getElementById('totalbar').style.display = (id==='activites' && !isKid() && anyPicked()) ? 'block':'none';
+ if(id==='carte'){setTimeout(()=>{map.invalidateSize();},150);}
+}
+
+/* ---------- STOCKAGE ---------- */
+var store={};
+try{store=JSON.parse(localStorage.getItem('cambrils2026')||'{}');}catch(e){store={};}
+function save(){try{localStorage.setItem('cambrils2026',JSON.stringify(store));}catch(e){}}
+
+/* ---------- PROFILS & LANGUE ---------- */
+var PROFILES={papa:"👨 Fatih 👑",maman:"👩 Şule",meryem:"👧 Meryem (8)",esma:"👧 Esma (6)"};
+function isKid(){return store.profile==='meryem'||store.profile==='esma';}
+function kidP(){return store.profile==='meryem'?'M':'E';}
+function LNG(){return store.profile==='maman'?'tr':'fr';}
+
+var UI={
+fr:{tabs:['🧳 Valise','🚗 Trajet','🎡 Activités','🗺️ Carte'],
+ hero:'🌴 Nos vacances à Cambrils',
+ herolinks:'📍 <a href="https://www.booking.com/hotel/es/villa-flor-cambrils.fr.html" target="_blank">Réservation Villa Flor (Booking)</a> · <a href="https://www.google.com/maps/search/?api=1&query=41.0776226,1.1044839" target="_blank">Voir sur Google Maps</a>',
+ listtitle:'Checklist départ',reset:'↺ Tout décocher',resetConfirm:'Tout décocher la valise ?',
+ ready:function(p,d,t){return p+' % prêt ('+d+'/'+t+' cochés)'+(p===100?' — EN ROUTE ! 🚗💨':'');},
+ acttitle:'🎡 À faire autour de Cambrils',
+ actintro:'Prix estimés pour vous 4. Clique un titre → Google Maps (photos, avis, itinéraire). Coche « On le fait ! » → le budget se calcule en bas. Prix indicatifs juillet 2026, à confirmer sur les sites officiels (moins cher en ligne).',
+ pick:'On le fait !',pickKid:'💖 J\'en ai envie !',fav:'⭐ Nos choix',favKid:'💖 Mes envies',
+ maptitle:'🗺️ Tout sur la carte',maplegend:'🔴 Villa Flor (Cambrils) · autres marqueurs = activités — clique un point pour ouvrir Google Maps. Positions approximatives.',
+ totallabel:'🎯 Activités choisies :',actWord:function(n){return n+' activité'+(n>1?'s':'');},
+ openMaps:'Ouvrir dans Google Maps',siteBtn:'🌐 Site & billets',
+ who:'👋 Qui utilise l\'appli ?',cancel:'Annuler',change:'changer',share:'📤 partager mon avancement',journal:'📒 journal',
+ journalTitle:'📒 Journal famille',journalEmpty:'Rien pour l\'instant. Quand quelqu\'un coche quelque chose, ça s\'affiche ici. Les autres téléphones envoient leur avancement avec « 📤 partager ».',close:'✖ Fermer',
+ shareMsg:'Mon avancement vacances 🌴 ouvre ce lien : ',shareCopied:'Lien copié ! Colle-le dans WhatsApp 👍',sharePrompt:'Copie ce lien et envoie-le :',merged:'✅ Avancement famille fusionné !',
+ cd:function(g){return '🚗 Départ dans '+g+' jour'+(g>1?'s':'')+' !';},cdRoad:'🚗 En route ! Cambrils nous attend !',cdThere:'🌴 EN VACANCES ! Profitez !',cdAfter:'🌴 Quelles belles vacances c\'était…',
+ kidCardTitle:'🚗 On arrive quand ?',
+ kidCardText:'Sur la route, appuie sur le bouton : la carte montre <b>le chemin qui reste</b> et <b>l\'heure d\'arrivée</b> ! ⏰ Plus besoin de demander « c\'est quand qu\'on arrive ? » 😄',
+ kidBtnVilla:'🏠 Il reste combien jusqu\'à la villa ?',kidBtnLyon:'Jour 1 : combien jusqu\'à Lyon ?',kidBtnNimes:'Jour 2 : combien jusqu\'à Nîmes ?',
+ kidGps:'💡 La localisation (GPS) de la tablette doit être activée.'},
+tr:{tabs:['🧳 Bavul','🚗 Yolculuk','🎡 Aktiviteler','🗺️ Harita'],
+ hero:'🌴 Cambrils Tatilimiz',
+ herolinks:'📍 <a href="https://www.booking.com/hotel/es/villa-flor-cambrils.fr.html" target="_blank">Villa Flor rezervasyonu (Booking)</a> · <a href="https://www.google.com/maps/search/?api=1&query=41.0776226,1.1044839" target="_blank">Google Maps\'te gör</a>',
+ listtitle:'Yola çıkış listesi',reset:'↺ Tümünü kaldır',resetConfirm:'Bavul listesindeki tüm işaretler kaldırılsın mı?',
+ ready:function(p,d,t){return '%'+p+' hazır ('+d+'/'+t+' işaretli)'+(p===100?' — YOLA ÇIKIYORUZ! 🚗💨':'');},
+ acttitle:'🎡 Cambrils çevresinde yapılacaklar',
+ actintro:'4 kişilik aile için tahmini fiyatlar. Başlığa tıkla → Google Maps açılır (fotoğraflar, yorumlar, rota). « Yapıyoruz! » işaretle → bütçe aşağıda hesaplanır. Temmuz 2026 tahmini fiyatları — resmi sitelerden teyit et.',
+ pick:'Yapıyoruz!',pickKid:'💖 İsterim!',fav:'⭐ Seçtiklerimiz',favKid:'💖 İsteklerim',
+ maptitle:'🗺️ Hepsi haritada',maplegend:'🔴 Villa Flor (Cambrils) · diğer işaretler = aktiviteler — bir noktaya tıkla, Google Maps\'te aç. Konumlar yaklaşıktır.',
+ totallabel:'🎯 Seçilen aktiviteler:',actWord:function(n){return n+' aktivite';},
+ openMaps:'Google Maps\'te aç',siteBtn:'🌐 Site & biletler',
+ who:'👋 Uygulamayı kim kullanıyor?',cancel:'Vazgeç',change:'değiştir',share:'📤 ilerlememi paylaş',journal:'📒 günlük',
+ journalTitle:'📒 Aile günlüğü',journalEmpty:'Şimdilik boş. Biri bir şey işaretlediğinde burada görünür.',close:'✖ Kapat',
+ shareMsg:'Tatil ilerlemem 🌴 bu linki aç: ',shareCopied:'Link kopyalandı! WhatsApp\'a yapıştır 👍',sharePrompt:'Bu linki kopyala ve gönder:',merged:'✅ Aile ilerlemesi birleştirildi!',
+ cd:function(g){return '🚗 Yola çıkışa '+g+' gün!';},cdRoad:'🚗 Yoldayız! Cambrils bizi bekliyor!',cdThere:'🌴 TATİLDEYİZ! Keyfini çıkarın!',cdAfter:'🌴 Ne güzel bir tatildi…',
+ kidCardTitle:'🚗 Ne zaman varıyoruz?',
+ kidCardText:'Yoldayken düğmeye bas: haritada <b>kalan yol</b> ve <b>varış saati</b> görünür! ⏰',
+ kidBtnVilla:'🏠 Villaya ne kadar kaldı?',kidBtnLyon:'1. gün: Lyon\'a ne kadar?',kidBtnNimes:'2. gün: Nîmes\'e ne kadar?',
+ kidGps:'💡 Tabletin konumu (GPS) açık olmalı.'}
+};
+function T(){return UI[LNG()];}
+
+function ensureProfile(){
+ if(store.profile&&PROFILES[store.profile]){applyLang();return;}
+ showProfilePicker(false);
+}
+function showProfilePicker(canCancel){
+ var ov=document.createElement('div');ov.id='profpick';
+ ov.style.cssText='position:fixed;inset:0;background:rgba(6,50,80,.96);z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px';
+ var h='<div style="color:#fff;font-size:1.25em;font-weight:700;margin-bottom:6px">👋 Qui utilise l\'appli ?<br><span style="font-size:.8em;opacity:.85">Uygulamayı kim kullanıyor?</span></div>';
+ Object.keys(PROFILES).forEach(function(p){
+  h+='<button onclick="setProfile(\''+p+'\')" style="width:100%;max-width:340px;padding:16px;border:none;border-radius:14px;background:#fff;font-size:1.15em;font-weight:600;cursor:pointer">'+PROFILES[p]+'</button>';
+ });
+ if(canCancel)h+='<button onclick="document.getElementById(\'profpick\').remove()" style="background:none;border:none;color:#9fd4ee;font-size:.95em;margin-top:6px;cursor:pointer">'+T().cancel+' / Vazgeç</button>';
+ ov.innerHTML=h;document.body.appendChild(ov);
+}
+function setProfile(p){
+ store.profile=p;save();
+ var ov=document.getElementById('profpick');if(ov)ov.remove();
+ applyLang();
+}
+function applyLang(){
+ var t=T();
+ document.documentElement.lang=LNG();
+ document.getElementById('herotitle').textContent=t.hero;
+ document.getElementById('herolinks').innerHTML=t.herolinks;
+ ['tab0','tabtrajet','tab2','tab3'].forEach(function(id,i){document.getElementById(id).textContent=t.tabs[i];});
+ document.getElementById('listtitle').textContent=t.listtitle;
+ document.getElementById('resetbtn').textContent=t.reset;
+ document.getElementById('acttitle').textContent=t.acttitle;
+ document.getElementById('actintro').textContent=t.actintro;
+ document.getElementById('maptitle').textContent=t.maptitle;
+ document.getElementById('maplegend').textContent=t.maplegend;
+ document.getElementById('totallabel').textContent=t.totallabel;
+ document.getElementById('trajet-fr').style.display=LNG()==='fr'?'':'none';
+ document.getElementById('trajet-tr').style.display=LNG()==='tr'?'':'none';
+ var kg=document.getElementById('kidgo');
+ kg.innerHTML=isKid()?'<a href="https://www.google.com/maps/dir/?api=1&destination=41.0776226,1.1044839&travelmode=driving" target="_blank" style="display:inline-block;background:#fff;color:#0077b6;font-weight:800;font-size:1.05em;padding:12px 20px;border-radius:24px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">'+t.kidBtnVilla+'</a>':'';
+ renderProfileBar();
+ renderChecklist();
+ renderActs();
+ renderCountdown();
+ buildMarkers();
+}
+function renderProfileBar(){
+ var b=document.getElementById('profilebar'),t=T();
+ var isPapa=store.profile==='papa';
+ b.innerHTML='👤 <b>'+PROFILES[store.profile]+'</b>'+
+ ' · <a href="#" onclick="showProfilePicker(true);return false" style="color:#ffe066">'+t.change+'</a>'+
+ ' · <a href="#" onclick="shareState();return false" style="color:#ffe066">'+t.share+'</a>'+
+ (isPapa?' · <a href="#" onclick="showJournal();return false" style="color:#ffe066">'+t.journal+'</a>':'');
+ var tt=document.getElementById('tabtrajet');
+ if(tt)tt.style.display=isKid()?'none':'';
+ if(isKid()&&document.getElementById('trajet').classList.contains('active'))showPage('valise',document.getElementById('tab0'));
+}
+function who(){return PROFILES[store.profile]?PROFILES[store.profile].replace(' 👑',''):'?';}
+function log(label,checked){
+ if(!store.j)store.j=[];
+ var d=new Date();
+ var h=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+ store.j.push({w:who(),t:(checked?'✅ ':'⬜ ')+label,h:h,ts:Date.now()});
+ if(store.j.length>150)store.j=store.j.slice(-150);
+}
+function showJournal(){
+ var t=T(),j=(store.j||[]).slice().reverse();
+ var ov=document.createElement('div');ov.id='journal';
+ ov.style.cssText='position:fixed;inset:0;background:rgba(6,50,80,.96);z-index:3000;display:flex;flex-direction:column;padding:16px;overflow:auto';
+ var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="color:#fff;font-size:1.2em">'+t.journalTitle+'</b><button onclick="document.getElementById(\'journal\').remove()" style="background:#fff;border:none;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer">'+t.close+'</button></div>';
+ if(!j.length)h+='<div style="color:#cfe8f5">'+t.journalEmpty+'</div>';
+ j.forEach(function(e){h+='<div style="background:#fff;border-radius:10px;padding:9px 12px;margin-bottom:7px;font-size:.92em"><b>'+e.w+'</b> — '+e.t+' <span style="color:#8aa0b3;font-size:.85em">· '+e.h+'</span></div>';});
+ ov.innerHTML=h;document.body.appendChild(ov);
+}
+
+/* ---------- PARTAGE ENTRE TELEPHONES ---------- */
+function shareState(){
+ var t=T(),o={k:{},j:(store.j||[]).slice(-80)};
+ Object.keys(store).forEach(function(k){if((k[0]==='c'||k[0]==='a'||k[0]==='k'||k[0]==='w')&&store[k])o.k[k]=1;});
+ var b64=btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+ var url=(location.protocol.indexOf('http')===0?location.origin+location.pathname:location.href.split('#')[0])+'#s='+b64;
+ var msg=t.shareMsg+url;
+ if(navigator.share){navigator.share({title:'Cambrils',text:msg}).catch(function(){});}
+ else if(navigator.clipboard){navigator.clipboard.writeText(msg);alert(t.shareCopied);}
+ else{prompt(t.sharePrompt,url);}
+}
+function mergeFromHash(){
+ if(location.hash.indexOf('#s=')!==0)return;
+ try{
+  var o=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));
+  Object.keys(o.k||{}).forEach(function(k){store[k]=true;});
+  if(o.j&&o.j.length){
+   if(!store.j)store.j=[];
+   var seen={};store.j.forEach(function(e){seen[e.w+e.t+e.ts]=1;});
+   o.j.forEach(function(e){if(!seen[e.w+e.t+e.ts])store.j.push(e);});
+   store.j.sort(function(a,b){return a.ts-b.ts;});
+   if(store.j.length>150)store.j=store.j.slice(-150);
+  }
+  save();
+  history.replaceState(null,'',location.pathname+location.search);
+  alert(UI.fr.merged);
+ }catch(e){}
+}
+
+/* ---------- CHECKLISTS (FR & TR alignées : mêmes clés) ---------- */
+var checklist_fr=[
+{cat:"📄 Documents (le plus important !)",items:[
+"<b style='font-size:1.2em;color:#c0392b'>🎒 SAC À DOS DE FATIH — EFFETS PERSONNELS ⚠️ NE PAS OUBLIER !</b>",
+"Cartes d'identité / passeports × 4 (validité OK ?)",
+"Permis de conduire + carte grise",
+"Carte verte assurance auto (demander à l'assureur si pas reçue)",
+"Cartes CEAM × 4 (gratuites via Famiris — version numérique dans l'appli Solidaris)",
+"Confirmation Booking Villa Flor (imprimée + téléphone)",
+"Réservations hôtels d'étape",
+"Cartes bancaires + espèces € (dépôt villa : 300 € en cash !)",
+"Téléphone du propriétaire / infos check-in"]},
+{cat:"🚘 Voiture & route",items:[
+"Gilets jaunes × 4 (dans l'habitacle, pas le coffre !)",
+"Triangle de signalisation",
+"Contrôle avant départ : pneus, niveaux, clim, essuie-glaces",
+"Badge télépéage (Ulys / Bip&Go) ou CB prête",
+"Support téléphone + chargeur voiture",
+"Pare-soleil vitres arrière pour les filles",
+"Glacière : eau fraîche, fruits, sandwichs jour 1",
+"Sacs poubelle + essuie-tout",
+"Lunettes de soleil conducteur"]},
+{cat:"🎒 Occupations enfants (trajet)",items:[
+"Tablettes chargées + films TÉLÉCHARGÉS (pas de wifi sur l'autoroute !)",
+"Casques audio enfants × 2",
+"Cahiers de coloriage / activités + crayons",
+"Petits jeux de voyage (cartes, devinettes)",
+"Coussins de nuque × 2 + petit plaid",
+"Snacks : compotes, biscuits, bonbons surprise",
+"Lingettes + sacs (mal des transports)",
+"Doudous de Meryem et Esma 🧸"]},
+{cat:"💊 Pharmacie de voyage",items:[
+"Paracétamol adulte + sirop enfant",
+"Médicament mal des transports (si besoin)",
+"Crème solaire SPF 50+ (× 2, ça part vite)",
+"Après-soleil / Biafine",
+"Anti-moustiques + crème apaisante",
+"Pansements, désinfectant, compresses",
+"Thermomètre",
+"Pince à épiler (échardes)",
+"Médicaments personnels",
+"Sérum physiologique + antihistaminique"]},
+{cat:"🏖️ Plage & piscine",items:[
+"2 maillots par personne (un qui sèche, un qu'on porte)",
+"Serviettes de plage × 4 (vérifier si la villa en fournit)",
+"Lunettes de piscine des filles",
+"Brassards / bouées",
+"Chaussures d'eau (rochers et galets)",
+"Casquettes / chapeaux × 4",
+"Jouets de plage : seau, pelle, raquettes, ballon",
+"Grand sac de plage + natte",
+"Tee-shirts anti-UV pour les filles"]},
+{cat:"👕 Vêtements (6 jours)",items:[
+"Tenues légères 6 jours / personne",
+"1 gilet léger chacun (soirées)",
+"Baskets + sandales/tongs",
+"Pyjamas légers",
+"Sous-vêtements + rab",
+"1 jolie tenue (resto au port 😉)",
+"Sac à linge sale"]},
+{cat:"🔌 Tech & divers",items:[
+"Chargeurs + multiprise (1 prise = 4 appareils)",
+"Batterie externe chargée",
+"Pas d'adaptateur nécessaire : prises identiques en Espagne ✔",
+"Appareil photo / GoPro",
+"Enceinte bluetooth pour la piscine",
+"Jeux de société / UNO pour les soirées",
+"Dosettes lessive + sacs congélation",
+"Café/thé + sel/huile pour le 1er soir (les villas sont vides !)",
+"Tupperware pour les pique-niques"]},
+{cat:"🛒 Courses avant le départ",items:[
+"Bouteilles d'eau (route + villa)",
+"Sandales pour Şule 👡",
+"T-shirts manches courtes pour Esma",
+"Antidouleur",
+"Anti-moustiques"]}
+];
+var checklist_tr=[
+{cat:"📄 Belgeler (en önemlisi!)",items:[
+"<b style='font-size:1.2em;color:#c0392b'>🎒 FATİH'İN SIRT ÇANTASI — KİŞİSEL EŞYALAR ⚠️ UNUTMA!</b>",
+"Kimlik kartları / pasaportlar × 4 (geçerlilik OK mi?)",
+"Ehliyet + araç ruhsatı",
+"Yeşil sigorta kartı (gelmemişse sigortacıdan iste)",
+"CEAM kartları × 4 (Famiris'ten ücretsiz — Solidaris uygulamasında dijital hali var)",
+"Booking Villa Flor onayı (çıktı + telefonda)",
+"Mola oteli rezervasyonları",
+"Banka kartları + nakit € (villada 300 € nakit depozito!)",
+"Villa sahibinin telefonu / check-in bilgileri"]},
+{cat:"🚘 Araba & yol",items:[
+"Sarı yelekler × 4 (bagajda değil, araç içinde!)",
+"Reflektör üçgen",
+"Yola çıkmadan kontrol: lastikler, yağ/su, klima, silecekler",
+"Otoyol geçiş cihazı (Ulys / Bip&Go) veya kart hazır",
+"Telefon tutucu + araç şarjı",
+"Kızlar için arka cam güneşliği",
+"Buzluk: soğuk su, meyve, 1. gün sandviçleri",
+"Çöp poşetleri + kağıt havlu",
+"Sürücü güneş gözlüğü"]},
+{cat:"🎒 Yolda çocuklar için",items:[
+"Tabletler şarjlı + filmler İNDİRİLMİŞ (otoyolda wifi yok!)",
+"Çocuk kulaklıkları × 2",
+"Boyama / etkinlik kitapları + kalemler",
+"Yol oyunları (kartlar, bilmeceler)",
+"Boyun yastığı × 2 + küçük battaniye",
+"Atıştırmalık: meyve püresi, bisküvi, sürpriz şekerler",
+"Islak mendil + poşet (araç tutarsa)",
+"Meryem ve Esma'nın uyku arkadaşları 🧸"]},
+{cat:"💊 Seyahat eczanesi",items:[
+"Parasetamol yetişkin + çocuk şurubu",
+"Araç tutması ilacı (gerekirse)",
+"Güneş kremi SPF 50+ (× 2, çabuk biter)",
+"Güneş sonrası losyon / Biafine",
+"Sivrisinek kovucu + kaşıntı kremi",
+"Yara bandı, dezenfektan, gazlı bez",
+"Derece",
+"Cımbız (kıymık için)",
+"Kişisel ilaçlar",
+"Serum fizyolojik + alerji ilacı"]},
+{cat:"🏖️ Plaj & havuz",items:[
+"Kişi başı 2 mayo (biri kurur, biri giyilir)",
+"Plaj havluları × 4 (villa veriyor mu kontrol et)",
+"Kızların yüzme gözlükleri",
+"Kolluklar / simitler",
+"Deniz ayakkabıları (kayalık için)",
+"Şapkalar × 4",
+"Plaj oyuncakları: kova, kürek, raket, top",
+"Büyük plaj çantası + hasır",
+"Kızlara UV korumalı tişört"]},
+{cat:"👕 Kıyafetler (6 gün)",items:[
+"Kişi başı 6 günlük hafif kıyafet",
+"Herkese 1 ince hırka (akşamlar)",
+"Spor ayakkabı + sandalet/terlik",
+"İnce pijamalar",
+"İç çamaşırı + yedek",
+"1 şık kıyafet (limanda yemek 😉)",
+"Kirli çamaşır torbası"]},
+{cat:"🔌 Teknoloji & çeşitli",items:[
+"Şarjlar + çoklu priz (1 priz = 4 cihaz)",
+"Powerbank şarjlı",
+"Adaptör gerekmez: İspanya'da prizler aynı ✔",
+"Fotoğraf makinesi / GoPro",
+"Havuz için bluetooth hoparlör",
+"Akşamlar için kutu oyunları / UNO",
+"Deterjan kapsülleri + poşetler",
+"İlk akşam için kahve/çay + tuz/yağ (villalar boş olur!)",
+"Piknikler için saklama kapları"]},
+{cat:"🛒 Alışveriş listesi (yola çıkmadan)",items:[
+"Su şişeleri (yol + villa)",
+"Şule için sandalet 👡",
+"Esma için kısa kollu tişörtler",
+"Ağrı kesici",
+"Sivrisinek ilacı"]}
+];
+
+/* Liste perso des filles (toujours en français) */
+var kidChecklist=[
+{cat:"🎒 Mon sac",items:[
+"Mes maillots (2)",
+"Ma serviette",
+"Mes lunettes de soleil",
+"Ma casquette",
+"Mes sandales",
+"Mon pyjama",
+"Mes sous-vêtements",
+"J'ai choisi mes habits avec maman ✔"]},
+{cat:"🚗 Mon sac pour la route",items:[
+"Ma tablette chargée + films téléchargés",
+"Mon casque",
+"Mon cahier de coloriage + mes crayons",
+"Mon doudou 🧸",
+"Ma gourde",
+"Mon petit goûter"]},
+{cat:"🏖️ Mes affaires piscine & plage",items:[
+"Mes lunettes de piscine",
+"Mes brassards / ma bouée",
+"Mes chaussures d'eau",
+"Mes jouets de plage (seau, pelle)",
+"Je n'oublie pas la crème solaire ! ☀️"]}
+];
+
+function hiddenItem(it){return (it.indexOf('SIRT ÇANTASI')>-1||it.indexOf('SAC À DOS')>-1) && store.profile!=='papa';}
+function curList(){return isKid()?kidChecklist:(LNG()==='tr'?checklist_tr:checklist_fr);}
+function curPref(){return isKid()?('k'+kidP()+'_'):'c';}
+function renderChecklist(){
+ var host=document.getElementById('checklists');host.innerHTML='';
+ var t=T();
+ var rb=document.getElementById('resetbtn');if(rb)rb.style.display=isKid()?'none':'';
+ var list=curList(),pref=curPref();
+ list.forEach(function(c,ci){
+  var vis=c.items.filter(function(it){return isKid()||!hiddenItem(it);});
+  var done=c.items.filter(function(it,ii){return (isKid()||!hiddenItem(it))&&store[pref+ci+'_'+ii];}).length;
+  var card=document.createElement('div');card.className='card';
+  var h='<div class="cat-head"><h2>'+c.cat+'</h2><span class="cat-count">'+done+'/'+vis.length+'</span></div>';
+  c.items.forEach(function(it,ii){
+   if(!isKid()&&hiddenItem(it))return;
+   var k=pref+ci+'_'+ii,ck=store[k]?'checked':'';
+   h+='<label class="check-item '+(store[k]?'done':'')+'"><input type="checkbox" '+ck+' onchange="tog(\''+k+'\')"><span>'+it+'</span></label>';
+  });
+  card.innerHTML=h;host.appendChild(card);
+ });
+ updateGlobal();
+}
+function tog(k){
+ store[k]=!store[k];
+ var label=k,m=k.match(/^c(\d+)_(\d+)$/),km=k.match(/^k[ME]_(\d+)_(\d+)$/);
+ if(m)label=(LNG()==='tr'?checklist_tr:checklist_fr)[+m[1]].items[+m[2]];
+ else if(km)label=kidChecklist[+km[1]].items[+km[2]];
+ log(label,store[k]);
+ save();renderChecklist();
+}
+function resetChecks(){
+ if(!confirm(T().resetConfirm))return;
+ Object.keys(store).forEach(function(k){if(k[0]==='c')delete store[k];});
+ save();renderChecklist();
+}
+function updateGlobal(){
+ var tot=0,done=0;
+ var list=curList(),pref=curPref();
+ list.forEach(function(c,ci){c.items.forEach(function(it,ii){if(!isKid()&&hiddenItem(it))return;tot++;if(store[pref+ci+'_'+ii])done++;});});
+ var pct=tot?Math.round(done/tot*100):0;
+ document.getElementById('globalbar').style.width=pct+'%';
+ document.getElementById('globaltxt').textContent=T().ready(pct,done,tot);
+}
+
+/* ---------- ACTIVITES (FR & TR alignées : mêmes indices) ---------- */
+var acts_shared=[
+{e:"🏖️",cls:"free",fam:0,map:"https://www.google.com/maps/search/?api=1&query=Platja+del+Regueral+Cambrils",lat:41.0637,lng:1.0710},
+{e:"⛵",cls:"free",fam:15,map:"https://www.google.com/maps/search/?api=1&query=Parc+del+Pescador+Cambrils",lat:41.0668,lng:1.0610},
+{e:"🎢",cls:"top",fam:205,map:"https://www.google.com/maps/search/?api=1&query=PortAventura+World",site:"https://www.portaventuraworld.com/fr",lat:41.0870,lng:1.1560},
+{e:"🌊",cls:"paid",fam:125,map:"https://www.google.com/maps/search/?api=1&query=Caribe+Aquatic+Park+Salou",site:"https://www.portaventuraworld.com/fr",lat:41.0845,lng:1.1560},
+{e:"💦",cls:"paid",fam:98,map:"https://www.google.com/maps/search/?api=1&query=Aquopolis+Costa+Dorada+La+Pineda",site:"https://costa-dorada.aquopolis.es/",lat:41.0812,lng:1.1858},
+{e:"⛴️",cls:"paid",fam:140,map:"https://www.google.com/maps/search/?api=1&query=Port+de+Cambrils",site:"https://www.creuerscostadaurada.com/",lat:41.0645,lng:1.0585},
+{e:"🦜",cls:"paid",fam:30,map:"https://www.google.com/maps/search/?api=1&query=Parc+Sama+Cambrils",site:"https://parcsama.es/",lat:41.0925,lng:1.0325},
+{e:"🏛️",cls:"paid",fam:15,map:"https://www.google.com/maps/search/?api=1&query=Amfiteatre+de+Tarragona",site:"https://www.tarragonaturisme.cat/fr",lat:41.1148,lng:1.2589},
+{e:"🏙️",cls:"top",fam:90,map:"https://www.google.com/maps/search/?api=1&query=Sagrada+Familia+Barcelona",site:"https://sagradafamilia.org/tickets",lat:41.4036,lng:2.1744},
+{e:"🏞️",cls:"free",fam:0,map:"https://www.google.com/maps/search/?api=1&query=Siurana+Tarragona",lat:41.2578,lng:0.9339},
+{e:"🏎️",cls:"paid",fam:55,map:"https://www.google.com/maps/search/?api=1&query=Karting+Salou",lat:41.0785,lng:1.1400},
+{e:"🌳",cls:"paid",fam:75,map:"https://www.google.com/maps/search/?api=1&query=Bosc+Aventura+Salou",lat:41.0777,lng:1.1310},
+{e:"🦩",cls:"paid",fam:40,map:"https://www.google.com/maps/search/?api=1&query=Riumar+Deltebre",lat:40.7226,lng:0.8497},
+{e:"🥘",cls:"paid",fam:90,map:"https://www.google.com/maps/search/?api=1&query=restaurants+port+Cambrils",lat:41.0650,lng:1.0580},
+{e:"⛲",cls:"free",fam:0,map:"https://www.google.com/maps/search/?api=1&query=Font+Lluminosa+Salou",lat:41.0755,lng:1.1420},
+{e:"🥾",cls:"free",fam:0,map:"https://www.google.com/maps/search/?api=1&query=Cala+Crancs+Salou",lat:41.0620,lng:1.1660},
+{e:"🛍️",cls:"free",fam:12,map:"https://www.google.com/maps/search/?api=1&query=Mercat+de+Cambrils",lat:41.0700,lng:1.0560},
+{e:"🛶",cls:"paid",fam:22,map:"https://www.google.com/maps/search/?api=1&query=pedalo+platja+Salou",lat:41.0730,lng:1.1300},
+{e:"🏙️",cls:"paid",fam:20,map:"https://www.google.com/maps/search/?api=1&query=Gaudi+Centre+Reus",site:"https://www.gaudicentre.cat/fr/",lat:41.1550,lng:1.1070},
+{e:"🚲",cls:"paid",fam:35,map:"https://www.google.com/maps/search/?api=1&query=bike+rental+Cambrils",site:"https://www.bimbimbikes.fr/location-velo/espagne/cambrils/drac-beach-rent-s-l",lat:41.0660,lng:1.0630},
+{e:"🕌",cls:"free",fam:0,map:"https://www.google.com/maps/search/?api=1&query=halal+Cambrils+Salou",site:"https://www.google.com/maps/search/?api=1&query=mezquita+Reus",lat:41.0685,lng:1.0640}
+];
+var acts_fr=[
+{n:"Piscine privée + plages de Cambrils",tag:"GRATUIT",d:"Platja del Regueral et Vilafortuny : sable fin, pente douce — parfait pour les filles. Drapeau + poste de secours en juillet.",meta:"À 2 pas de la villa · tous les jours"},
+{n:"Vieux port de Cambrils + Parc del Pescador",tag:"~15 € (glaces)",d:"Balade au port le soir, super aire de jeux gratuite au Parc del Pescador, glaces et churros. Marché le mercredi matin.",meta:"Centre Cambrils · en soirée"},
+{n:"PortAventura Park",tag:"~190-220 € famille",d:"LE plus grand parc d'attractions d'Espagne (15 min de la villa). Zone SésamoAventura parfaite pour 6-8 ans + grands huit pour les courageuses. Adulte ~48-61 €, enfant 4-10 ans ~42-53 €. Réserver EN LIGNE = moins cher.",meta:"Salou · 15 min · journée entière"},
+{n:"Caribe Aquatic Park (PortAventura)",tag:"~125 € famille",d:"Le parc aquatique de PortAventura, ambiance Caraïbes. Adulte dès 33 €, enfant dès 29 €. Combo possible avec le parc principal.",meta:"Salou · 15 min · demi-journée/journée"},
+{n:"Aquopolis Costa Dorada",tag:"~95-100 € famille",d:"Parc aquatique de La Pineda : toboggans, piscine à vagues, zone enfants. Dès ~24 €/pers en ligne (plus cher en caisse).",meta:"La Pineda · 20 min · journée"},
+{n:"Catamaran Ocean Fly — baignade en mer",tag:"~130-150 € famille",d:"3h de catamaran depuis le port de Cambrils : ancre dans une crique, baignade + repas à bord. Adulte dès 44 €, tarif enfant réduit. Souvenir garanti.",meta:"Port de Cambrils · 3h · réserver"},
+{n:"Parc Samà — jardin exotique",tag:"~30 € famille",d:"Parc botanique magique à 10 min : paons en liberté, perroquets, grotte, lac. Adulte ~9 €, enfant ~6 €. Tôt le matin avant la chaleur.",meta:"Montbrió · 10 min · 2-3h"},
+{n:"Tarragone romaine (amphithéâtre face à la mer)",tag:"~5-25 € famille",d:"Amphithéâtre romain au bord de la mer : 2,45 €/adulte, GRATUIT -16 ans ! Combiné 4 monuments 12 €. + Rambla Nova et Balcó del Mediterrani. Les filles adorent jouer aux gladiateurs 😄",meta:"Tarragone · 25 min · demi-journée"},
+{n:"Barcelone à la journée",tag:"~60-120 € famille",d:"À seulement 1h15 en voiture (109 km) ! Sagrada Família (gratuit dehors, ~26 €/adulte dedans — réserver EN LIGNE à l'avance), Park Güell, La Rambla + quartier gothique, plage Barceloneta. Astuce : parking de métro ou train direct depuis la gare de Cambrils (~2h). Avant de rentrer : Font Màgica, spectacle GRATUIT !",meta:"Barcelone · 1h15 voiture · journée"},
+{n:"Siurana — le village au bord de la falaise",tag:"GRATUIT",d:"À 35 min : village légendaire perché sur les falaises, vue sur un lac turquoise — un des plus beaux villages de Catalogne. Photos magnifiques, petite balade, limonade au café du village. Parfait un matin frais.",meta:"Priorat · 35 min voiture · demi-journée"},
+{n:"Karting Salou",tag:"~50-60 € famille",d:"Piste enfants dès 4 ans + karts biplaces parent-enfant. ~12-20 €/course. Parfait en fin d'après-midi.",meta:"Salou · 15 min · 1-2h"},
+{n:"Bosc Aventura Salou (accrobranche)",tag:"~70-80 € famille",d:"Parcours dans les arbres + tyroliennes, parcours enfants dès 4 ans. ~15-22 €/pers. À l'ombre = top par forte chaleur.",meta:"Salou · 15 min · 2-3h"},
+{n:"Delta de l'Èbre + croisière à Riumar",tag:"~40 € famille",d:"Flamants roses, rizières, croisière sur l'Èbre (~12 €/adulte, ~6 €/enfant), plage sauvage de Riumar. Belle excursion journée.",meta:"Deltebre · 40 min · journée"},
+{n:"Soirée resto au port + mini-golf",tag:"~80-100 € famille",d:"Vieux port de Cambrils, capitale gastronomique de la Costa Dorada. Astuce halal : paella de marisco / fideuà (sans viande) ou poisson grillé — demande « sin carne, sin cerdo ». + mini-golf ou manèges.",meta:"Cambrils · 1 soirée"},
+{n:"Font Lluminosa de Salou — fontaine magique",tag:"GRATUIT",d:"Spectacle son & lumière de la fontaine de Salou, tous les soirs d'été (~22h). Les filles vont adorer, et c'est gratuit. À combiner avec une glace sur la promenade.",meta:"Salou · 15 min · le soir"},
+{n:"Camí de Ronda + Cala Crancs",tag:"GRATUIT",d:"Sentier côtier facile vers des criques turquoise (Cala Crancs, Penya Tallada). Baignade en crique = souvenir garanti. Y aller tôt, prévoir eau + chaussures d'eau.",meta:"Salou · 15 min · matinée"},
+{n:"Marché de Cambrils + petit train",tag:"~10-15 €",d:"Marché du mercredi matin (fruits, olives, souvenirs) + petit train touristique le long du front de mer — les enfants adorent.",meta:"Cambrils · mercredi matin"},
+{n:"Pédalo à toboggan",tag:"~20-25 €/h",d:"Pédalos avec mini-toboggan sur les plages de Cambrils et Salou. Une heure de rigolade — papa pédale 😄",meta:"Plages Cambrils/Salou · 1h"},
+{n:"Reus — Gaudí Centre & centre-ville",tag:"~20 € famille",d:"Ville natale de Gaudí à 15 min : Gaudí Centre interactif (dès 6 ans), places animées, meilleures glaces de la région. Pour un après-midi nuageux ou trop chaud.",meta:"Reus · 15 min · demi-journée"},
+{n:"Location de vélos — balade en bord de mer",tag:"~30-40 €/jour famille",d:"Cambrils = paradis du vélo : piste plate et sûre le long de la mer jusqu'à Salou. Loueurs : Gabi Bike, Drac Beach Rent (livraison GRATUITE à la villa dès 2 jours ; casques, antivols, siège enfant inclus). ~6-12 €/vélo/jour, tailles enfants pour Meryem et Esma. Top le soir au frais.",meta:"Cambrils · piste côtière · demi-journée"},
+{n:"Halal & pratique — bonnes adresses",tag:"Infos utiles",d:"Resto 100% halal : Pak Cambrils Döner Kebab (Carrer de l'Escola 12). Boucheries halal à Salou : Carrer Major 9 et Carrer de Madrid 16. Mosquées : centre islamique de Cambrils, As-Sunnah à Reus (15 min). Mercadona/Lidl : poisson, œufs, légumes — viande halal en boucherie.",meta:"Cambrils · Salou · Reus"}
+];
+var acts_tr=[
+{n:"Özel havuz + Cambrils plajları",tag:"ÜCRETSİZ",d:"Platja del Regueral ve Vilafortuny: ince kum, sığ giriş — kızlar için mükemmel. Temmuzda cankurtaran var.",meta:"Villaya 2 adım · her gün"},
+{n:"Cambrils eski limanı + Parc del Pescador",tag:"~15 € (dondurma)",d:"Akşam liman gezisi, ücretsiz süper oyun alanı, dondurma ve churros. Çarşamba sabahı pazar kurulur.",meta:"Cambrils merkez · akşamları"},
+{n:"PortAventura Park",tag:"~190-220 € aile",d:"İspanya'nın EN büyük lunaparkı (15 dk). SésamoAventura bölgesi 6-8 yaş için mükemmel. Yetişkin ~48-61 €, çocuk ~42-53 €. İNTERNETTEN almak daha ucuz.",meta:"Salou · 15 dk · tam gün"},
+{n:"Caribe Aquatic Park (PortAventura)",tag:"~125 € aile",d:"PortAventura'nın su parkı, Karayip havası. Yetişkin 33 €'dan, çocuk 29 €'dan.",meta:"Salou · 15 dk · yarım/tam gün"},
+{n:"Aquopolis Costa Dorada",tag:"~95-100 € aile",d:"La Pineda su parkı: kaydıraklar, dalga havuzu, çocuk alanı. İnternetten ~24 €/kişi.",meta:"La Pineda · 20 dk · tam gün"},
+{n:"Katamaran Ocean Fly — denizde yüzme",tag:"~130-150 € aile",d:"3 saatlik katamaran turu: koyda demirleme, denizde yüzme + yemek. Yetişkin 44 €'dan. Unutulmaz anı.",meta:"Cambrils limanı · 3 saat"},
+{n:"Parc Samà — egzotik bahçe",tag:"~30 € aile",d:"10 dk mesafede botanik park: tavus kuşları, papağanlar, mağara, göl. Yetişkin ~9 €, çocuk ~6 €. Sabah erken git.",meta:"Montbrió · 10 dk · 2-3 saat"},
+{n:"Roma dönemi Tarragona (amfitiyatro)",tag:"~5-25 € aile",d:"Deniz kenarında Roma amfitiyatrosu: 2,45 €/yetişkin, 16 yaş altı ÜCRETSİZ! Kombine bilet 12 €. Kızlar gladyatörcülük oynar 😄",meta:"Tarragona · 25 dk · yarım gün"},
+{n:"Barselona'ya günübirlik gezi",tag:"~60-120 € aile",d:"Arabayla sadece 1s15! Sagrada Família (içi ~26 € — önceden internetten al), Park Güell, La Rambla, Barceloneta plajı. Park ipucu: metro otoparkı veya Cambrils'ten tren. Akşam Font Màgica ÜCRETSİZ!",meta:"Barselona · 1s15 araba · tam gün"},
+{n:"Siurana — uçurumun kenarındaki köy",tag:"ÜCRETSİZ",d:"35 dk: kayalıkların tepesinde, göl manzaralı efsanevi köy — Katalonya'nın en güzellerinden. Serin bir sabah için mükemmel.",meta:"Priorat · 35 dk araba · yarım gün"},
+{n:"Salou Karting",tag:"~50-60 € aile",d:"4 yaş üstü çocuk pisti + çift kişilik kartlar. ~12-20 €/tur.",meta:"Salou · 15 dk · 1-2 saat"},
+{n:"Bosc Aventura Salou (ağaç macera parkı)",tag:"~70-80 € aile",d:"Ağaçlarda parkurlar + zipline, 4 yaş üstü. ~15-22 €/kişi. Gölgede = sıcakta süper.",meta:"Salou · 15 dk · 2-3 saat"},
+{n:"Ebre Deltası + Riumar tekne turu",tag:"~40 € aile",d:"Flamingolar, pirinç tarlaları, nehir turu (~12 €/yetişkin), Riumar plajı. Güzel günübirlik gezi.",meta:"Deltebre · 40 dk · tam gün"},
+{n:"Limanda akşam yemeği + mini golf",tag:"~80-100 € aile",d:"Helal ipucu: deniz ürünlü paella / fideuà (etsiz) veya ızgara balık — « sin carne, sin cerdo » de. + mini golf.",meta:"Cambrils · 1 akşam"},
+{n:"Salou Işıklı Fıskiyesi",tag:"ÜCRETSİZ",d:"Işık ve su gösterisi, yaz akşamları (~22:00). Ücretsiz! Sahil yürüyüşü + dondurmayla birleştir.",meta:"Salou · 15 dk · akşam"},
+{n:"Camí de Ronda + Cala Crancs koyu",tag:"ÜCRETSİZ",d:"Turkuaz koylara kolay sahil patikası. Koyda yüzmek = garanti güzel anı. Sabah erken git.",meta:"Salou · 15 dk · sabah"},
+{n:"Cambrils pazarı + turistik tren",tag:"~10-15 €",d:"Çarşamba sabahı pazar + sahil boyunca mini tren — çocuklar bayılır.",meta:"Cambrils · çarşamba sabahı"},
+{n:"Kaydıraklı deniz bisikleti",tag:"~20-25 €/saat",d:"Kaydıraklı deniz bisikletleri. Bir saat kahkaha — pedalı baba çevirir 😄",meta:"Cambrils/Salou plajları · 1 saat"},
+{n:"Reus — Gaudí Merkezi",tag:"~20 € aile",d:"Gaudí'nin şehri, 15 dk: interaktif müze (6 yaş+), en iyi dondurmacılar. Çok sıcak günler için.",meta:"Reus · 15 dk · yarım gün"},
+{n:"Bisiklet kiralama — sahil turu",tag:"~30-40 €/gün aile",d:"Salou'ya kadar dümdüz sahil bisiklet yolu. Gabi Bike, Drac Beach Rent (villaya ücretsiz teslim; kask dahil). ~6-12 €/gün, çocuk boyları var.",meta:"Cambrils · sahil yolu · yarım gün"},
+{n:"Helal & pratik — iyi adresler",tag:"Faydalı bilgiler",d:"%100 helal: Pak Cambrils Döner Kebab (Carrer de l'Escola 12). Salou helal kasaplar: Carrer Major 9, Carrer de Madrid 16. Camiler: Cambrils İslam merkezi, Reus As-Sunnah (15 dk).",meta:"Cambrils · Salou · Reus"}
+];
+function acts(){var lang=LNG()==='tr'?acts_tr:acts_fr;return lang.map(function(a,i){var o={};Object.assign(o,acts_shared[i],a);return o;});}
+
+function renderActs(){
+ var host=document.getElementById('actlist');host.innerHTML='';
+ var t=T(),list=acts();
+ list.forEach(function(a,i){
+  var k=isKid()?('w'+kidP()+'_'+i):('a'+i),picked=store[k];
+  var links='<a class="btn btn-map" href="'+a.map+'" target="_blank">🗺️ Google Maps</a>';
+  if(a.site)links+='<a class="btn btn-site" href="'+a.site+'" target="_blank">'+t.siteBtn+'</a>';
+  var div=document.createElement('div');div.className='act-card '+a.cls;
+  div.innerHTML='<div class="act-title"><a href="'+a.map+'" target="_blank" style="text-decoration:none;color:inherit"><h3>'+a.e+' '+a.n+' <span style="font-size:.75em;opacity:.55">↗</span></h3></a><span class="act-price">'+a.tag+'</span></div>'+
+  '<div class="act-meta">📍 '+a.meta+'</div><div class="act-desc">'+a.d+'</div>'+links+
+  '<label class="pick"><input type="checkbox" '+(picked?'checked':'')+' onchange="pickAct(\''+k+'\')"> '+(isKid()?t.pickKid:t.pick)+'</label>';
+  host.appendChild(div);
+ });
+ updateTotal();
+}
+function pickAct(k){
+ store[k]=!store[k];
+ var i=k[0]==='a'?+k.slice(1):+k.split('_')[1];
+ var a=acts()[i];
+ log((k[0]==='w'?'💖 ':'🎡 ')+(a?a.n:k),store[k]);
+ save();updateTotal();
+}
+function anyPicked(){return acts_shared.some(function(_,i){return store['a'+i];});}
+function renderFavs(){
+ var t=T(),list=acts();
+ var keyf=function(i){return isKid()?('w'+kidP()+'_'+i):('a'+i);};
+ var picked=list.filter(function(a,i){return store[keyf(i)];});
+ var card=document.getElementById('favcard');
+ document.getElementById('favtitle').textContent=isKid()?t.favKid:t.fav;
+ if(!picked.length){card.style.display='none';return;}
+ card.style.display='block';
+ document.getElementById('favlist').innerHTML=picked.map(function(a){
+  return '<div style="padding:7px 0;border-bottom:1px solid #f0f4f7"><a href="'+a.map+'" target="_blank" style="text-decoration:none;color:#0077b6;font-weight:600">'+a.e+' '+a.n+' ↗</a> <span style="color:#6b7f92;font-size:.85em">· '+a.tag+'</span></div>';
+ }).join('');
+}
+function updateTotal(){
+ renderFavs();
+ var t=0,n=0;
+ acts_shared.forEach(function(a,i){if(store['a'+i]){t+=a.fam;n++;}});
+ var bar=document.getElementById('totalbar');
+ if(!isKid() && n>0 && document.getElementById('activites').classList.contains('active')){
+  bar.style.display='block';
+  document.getElementById('totalval').textContent='~'+t+' €';
+  document.getElementById('totalcount').textContent=' ('+T().actWord(n)+')';
+ }else{bar.style.display='none';}
+}
+
+/* ---------- COMPTE A REBOURS ---------- */
+function renderCountdown(){
+ var el=document.getElementById('countdown');if(!el)return;
+ var t=T(),now=new Date();
+ var d0=new Date(2026,6,10),d1=new Date(2026,6,12),d2=new Date(2026,6,18);
+ var s;
+ if(now<d0){s=t.cd(Math.ceil((d0-now)/86400000));}
+ else if(now<d1)s=t.cdRoad;
+ else if(now<d2)s=t.cdThere;
+ else s=t.cdAfter;
+ el.textContent=s;
+}
+
+/* ---------- CARTE ---------- */
+var Lf=window.L;
+var map=Lf.map('map').setView([41.07,1.09],11);
+Lf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+var markerLayer=Lf.layerGroup().addTo(map);
+function buildMarkers(){
+ markerLayer.clearLayers();
+ var t=T();
+ var villaIcon=Lf.divIcon({html:'<div style="font-size:26px">🏠</div>',className:'',iconSize:[26,26],iconAnchor:[13,13]});
+ Lf.marker([41.0776226,1.1044839],{icon:villaIcon}).addTo(markerLayer).bindPopup('<b>🏠 Villa Flor — Vilafortuny, Cambrils</b><br><a href="https://www.google.com/maps/search/?api=1&query=41.0776226,1.1044839" target="_blank">'+t.openMaps+'</a>');
+ acts().forEach(function(a){
+  if(!a.lat)return;
+  var ic=Lf.divIcon({html:'<div style="font-size:22px">'+a.e+'</div>',className:'',iconSize:[22,22],iconAnchor:[11,11]});
+  Lf.marker([a.lat,a.lng],{icon:ic}).addTo(markerLayer).bindPopup('<b>'+a.e+' '+a.n+'</b><br>'+a.tag+'<br><a href="'+a.map+'" target="_blank">'+t.openMaps+'</a>');
+ });
+}
+
+/* ---------- INIT ---------- */
+mergeFromHash();
+renderChecklist();
+renderActs();
+renderCountdown();
+buildMarkers();
+ensureProfile();
+</script>
+</body>
+</html>

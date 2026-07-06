@@ -1,0 +1,11 @@
+{
+  "name": "Cambrils Tatili 🌴",
+  "short_name": "Cambrils",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f0f6fa",
+  "theme_color": "#0077b6",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
