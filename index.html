@@ -91,7 +91,7 @@ td.r,th.r{text-align:right;white-space:nowrap}
 <!-- ==================== VALISE / BAVUL ==================== -->
 <div class="page active" id="valise">
 <div class="card">
-<h2><span id="listtitle">Checklist départ</span> <button class="btn btn-reset" id="resetbtn" onclick="resetChecks()">↺ Tout décocher</button></h2>
+<h2><span id="listtitle">Checklist départ</span></h2>
 <div class="progress-wrap"><div class="progress-bar" id="globalbar"></div></div>
 <div id="globaltxt" style="font-size:.9em;color:#6b7f92"></div>
 </div>
@@ -261,7 +261,7 @@ try{store=JSON.parse(localStorage.getItem('cambrils2026')||'{}');}catch(e){store
 function save(){try{localStorage.setItem('cambrils2026',JSON.stringify(store));}catch(e){}}
 
 /* ---------- PROFILS & LANGUE ---------- */
-var PROFILES={papa:"👨 Fatih 👑",maman:"👩 Şule",meryem:"👧 Meryem (8)",esma:"👧 Esma (6)"};
+var PROFILES={papa:"👨 Fatih",maman:"👩 Şule",meryem:"👧 Meryem",esma:"👧 Esma"};
 function isKid(){return store.profile==='meryem'||store.profile==='esma';}
 function kidP(){return store.profile==='meryem'?'M':'E';}
 function LNG(){return store.profile==='maman'?'tr':'fr';}
@@ -322,6 +322,12 @@ function showProfilePicker(canCancel){
  if(canCancel)h+='<button onclick="document.getElementById(\'profpick\').remove()" style="background:none;border:none;color:#9fd4ee;font-size:.95em;margin-top:6px;cursor:pointer">'+T().cancel+' / Vazgeç</button>';
  ov.innerHTML=h;document.body.appendChild(ov);
 }
+function tryChangeProfile(){
+ if(store.profile==='papa'){showProfilePicker(true);return;}
+ var c=prompt(LNG()==='tr'?'Kod?':'Code ?');
+ if(c==='1569')showProfilePicker(true);
+ else if(c!==null)alert(LNG()==='tr'?'Yanlış kod 🙈':'Mauvais code 🙈');
+}
 function setProfile(p){
  store.profile=p;save();
  var ov=document.getElementById('profpick');if(ov)ov.remove();
@@ -334,7 +340,6 @@ function applyLang(){
  document.getElementById('herolinks').innerHTML=t.herolinks;
  ['tab0','tabtrajet','tab2','tab3'].forEach(function(id,i){document.getElementById(id).textContent=t.tabs[i];});
  document.getElementById('listtitle').textContent=t.listtitle;
- document.getElementById('resetbtn').textContent=t.reset;
  document.getElementById('acttitle').textContent=t.acttitle;
  document.getElementById('actintro').textContent=t.actintro;
  document.getElementById('maptitle').textContent=t.maptitle;
@@ -354,8 +359,7 @@ function renderProfileBar(){
  var b=document.getElementById('profilebar'),t=T();
  var isPapa=store.profile==='papa';
  b.innerHTML='👤 <b>'+PROFILES[store.profile]+'</b>'+
- ' · <a href="#" onclick="showProfilePicker(true);return false" style="color:#ffe066">'+t.change+'</a>'+
- ' · <a href="#" onclick="shareState();return false" style="color:#ffe066">'+t.share+'</a>'+
+ ' · <a href="#" onclick="tryChangeProfile();return false" style="color:#ffe066">'+t.change+'</a>'+
  (isPapa?' · <a href="#" onclick="showJournal();return false" style="color:#ffe066">'+t.journal+'</a>':'');
  var tt=document.getElementById('tabtrajet');
  if(tt)tt.style.display=isKid()?'none':'';
